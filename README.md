@@ -126,8 +126,8 @@ https://your-app.railway.app/webhook/event
 #### 方式 B：手动部署
 
 ```bash
-git clone https://github.com/KindlyKickMaster/kindlykick-pmm-agent.git
-cd kindlykick-pmm-agent
+git clone https://github.com/weilelele/caihongpi-tipigu-zhuanjia.git
+cd caihongpi-tipigu-zhuanjia
 
 cp .env.example .env   # 编辑填入所有变量
 
@@ -206,7 +206,7 @@ cp .env.example .env
 ## 文件结构
 
 ```
-kindlykick-pmm-agent/
+caihongpi-tipigu-zhuanjia/
 ├── main.py            FastAPI 入口 + Webhook 接收
 ├── config.py          环境变量（pydantic-settings）
 ├── handlers.py        消息路由与业务逻辑
