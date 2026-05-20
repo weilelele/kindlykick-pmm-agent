@@ -23,3 +23,6 @@ build/
 
 # Logs
 *.log
+
+# Supabase CLI temp files
+supabase/.temp/
