@@ -584,26 +584,17 @@
     /* ── STORY (creator's note) ── */
     .story-section { background: rgba(26,31,43,.5); }
 
-    .story-author {
-      display: inline-flex;
-      align-items: center;
-      gap: 14px;
-      margin-top: 28px;
-    }
-    .author-avatar {
-      width: 52px;
-      height: 52px;
+    .author-avatar-inline {
+      width: 48px;
+      height: 48px;
       border-radius: 50%;
       object-fit: cover;
       border: 2px solid rgba(34,212,224,.5);
-      box-shadow: 0 0 16px rgba(34,212,224,.15);
-      flex-shrink: 0;
-    }
-    .author-name {
-      font-family: 'Orbitron', sans-serif;
-      font-size: 20px;
-      font-weight: 700;
-      color: var(--white);
+      box-shadow: 0 0 14px rgba(34,212,224,.2);
+      vertical-align: middle;
+      margin-right: 10px;
+      position: relative;
+      top: -3px;
     }
 
     .story-body {
@@ -818,11 +809,7 @@
   <div class="container">
     <div data-reveal>
       <p class="tag">// 设计者说</p>
-      <h2 class="section-title">我为什么<span class="accent-orange">造了这个东西</span></h2>
-      <div class="story-author">
-        <img src="./avatar.jpg" alt="乐乐" class="author-avatar"/>
-        <span class="author-name">乐乐</span>
-      </div>
+      <h2 class="section-title"><img src="./avatar.jpg" alt="乐乐" class="author-avatar-inline"/>为什么<span class="accent-orange">造了这个东西</span></h2>
     </div>
 
     <div class="story-body">
