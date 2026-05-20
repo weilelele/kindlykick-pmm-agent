@@ -254,6 +254,31 @@ async def _handle_content(
         else:
             await send(f"{at_prefix}⚠️ {target} 当前没有未完成的任务。")
 
+    elif action_type == "self_introduction":
+        bio = action.get("bio", "")
+        member = db.get_member_by_open_id(sender_open_id) if sender_open_id else None
+        if not member:
+            # _ensure_member was already called upstream, but just in case
+            member = db.get_member_by_open_id(sender_open_id) if sender_open_id else None
+        if member and bio:
+            db.update_member_bio(sender_open_id, bio)
+            log.info("Updated bio for %s: %s", sender_name, bio)
+
+        reply = action.get("reply", f"✅ 认识你了，{sender_name}！")
+        await send(f"{at_prefix}{reply}")
+
+        # Review unassigned tasks: auto-assign any that mention this member's name
+        matched = db.find_tasks_mentioning_name(sender_name)
+        if matched and member:
+            for t in matched:
+                db.update_task(t["id"], {
+                    "assignee_id": member["id"],
+                    "assignee_name": member["name"],
+                })
+            lines = [f"顺便帮你认领了 {len(matched)} 个待分配任务（之前不认识你，暂时挂着呢）："]
+            lines += [f"  · {t['title']}" for t in matched]
+            await send(f"{at_prefix}" + "\n".join(lines))
+
     elif action_type == "task_assignment":
         assignee_name = action.get("assignee_name", "")
         target_member = next(
@@ -508,6 +533,22 @@ async def _handle_group_mention(
                 log.warning("Could not fetch parent message %s: %s", parent_id, e)
 
     await _handle_content(text, sender_name, sender_open_id, send, "group_chat", at_prefix=at_sender)
+
+
+# ── Bot added to group ───────────────────────────────────────────
+
+async def handle_bot_added_to_group(chat_id: str) -> None:
+    """Sent when the bot is first added to a group. Introduce itself and invite self-intros."""
+    welcome = (
+        "大家好！我是踢屁股专家 👋\n\n"
+        "我会帮你们管理项目任务、追踪进展、每天早晚定时催单。\n\n"
+        "先来认识一下大家——请每位成员 @ 我做个自我介绍，说说你是谁、主要负责什么，例如：\n\n"
+        "「@踢屁股专家 我是张三，主要做前端开发，负责 Web 端所有页面」\n\n"
+        "认识你之后，我就能准确记录你的任务、在正确的时候 @ 你催单 💪\n"
+        "（如果会议记录里提到了你但还没自我介绍，待分配的任务会在你介绍完之后自动归到你名下）"
+    )
+    await fc.send_to_chat(chat_id, welcome)
+    log.info("Sent welcome message to group %s", chat_id)
 
 
 # ── Helpers ───────────────────────────────────────────────────────

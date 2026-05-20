@@ -26,6 +26,32 @@ def create_member(name: str, open_id: str, is_owner: bool = False) -> dict:
     }).execute().data[0]
 
 
+def update_member_bio(open_id: str, bio: str) -> None:
+    _client.table("members").update({"bio": bio}).eq("feishu_user_id", open_id).execute()
+
+
+def get_unassigned_tasks() -> list[dict]:
+    """Return active tasks with no assignee."""
+    return (
+        _client.table("tasks")
+        .select("*")
+        .is_("assignee_id", "null")
+        .neq("status", "done")
+        .order("created_at")
+        .execute()
+        .data
+    )
+
+
+def find_tasks_mentioning_name(name: str) -> list[dict]:
+    """Find active unassigned tasks whose title or description mentions the given name."""
+    unassigned = get_unassigned_tasks()
+    return [
+        t for t in unassigned
+        if name in (t.get("title") or "") or name in (t.get("description") or "")
+    ]
+
+
 # ── Tasks ─────────────────────────────────────────────────────────
 
 def get_active_tasks() -> list[dict]:

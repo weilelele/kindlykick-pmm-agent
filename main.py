@@ -6,6 +6,11 @@ from contextlib import asynccontextmanager
 import lark_oapi as lark
 import lark_oapi.ws.client as _lark_ws_client
 from lark_oapi.api.im.v1 import P2ImMessageReceiveV1
+try:
+    from lark_oapi.api.im.v1 import P2ImChatMemberBotAddedV1
+    _HAS_BOT_ADDED_EVENT = True
+except ImportError:
+    _HAS_BOT_ADDED_EVENT = False
 import json
 from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -62,6 +67,13 @@ async def _safe_handle(body: dict) -> None:
         log.error("Unhandled error in message handler: %s", e, exc_info=True)
 
 
+async def _safe_bot_added(chat_id: str) -> None:
+    try:
+        await handlers.handle_bot_added_to_group(chat_id)
+    except Exception as e:
+        log.error("Unhandled error in bot_added handler: %s", e, exc_info=True)
+
+
 # ── WebSocket client thread ────────────────────────────────────────
 
 def _start_ws_thread(main_loop: asyncio.AbstractEventLoop) -> None:
@@ -79,11 +91,20 @@ def _start_ws_thread(main_loop: asyncio.AbstractEventLoop) -> None:
             body = _ws_event_to_body(data)
             asyncio.run_coroutine_threadsafe(_safe_handle(body), main_loop)
 
-    handler = (
+    builder = (
         lark.EventDispatcherHandler.builder("", "")
         .register_p2_im_message_receive_v1(on_message)
-        .build()
     )
+
+    if _HAS_BOT_ADDED_EVENT:
+        def on_bot_added(data: "P2ImChatMemberBotAddedV1") -> None:
+            chat_id = data.event.chat_id if data.event else ""
+            if chat_id:
+                log.info("WS RECV bot_added chat_id=%s", chat_id)
+                asyncio.run_coroutine_threadsafe(_safe_bot_added(chat_id), main_loop)
+        builder = builder.register_p2_im_chat_member_bot_added_v1(on_bot_added)
+
+    handler = builder.build()
     cli = lark.ws.Client(
         settings.feishu_app_id,
         settings.feishu_app_secret,
@@ -145,5 +166,10 @@ async def webhook_event(request: Request, background_tasks: BackgroundTasks):
         msg_type = body.get("event", {}).get("message", {}).get("message_type", "")
         if msg_type in ("text", "post", "file", "image", "interactive"):
             background_tasks.add_task(_safe_handle, body)
+
+    elif event_type == "im.chat.member.bot.added_v1":
+        chat_id = body.get("event", {}).get("chat_id", "")
+        if chat_id:
+            background_tasks.add_task(_safe_bot_added, chat_id)
 
     return JSONResponse({"code": 0})

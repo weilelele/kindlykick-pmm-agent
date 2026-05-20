@@ -166,14 +166,22 @@ async def classify_message(
   "reply": "简短确认"
 }}
 
-⑤ 问询 — 询问项目状态、任务进度或其他问题
+⑤ 自我介绍 — 成员向 Bot 介绍自己是谁、做什么的
+{{
+  "action": "self_introduction",
+  "bio": "提炼的角色/职责描述（20字以内，如：前端开发，负责 Web 端）",
+  "reply": "热情欢迎，提到对方名字和角色"
+}}
+
+⑥ 问询 — 询问项目状态、任务进度或其他问题
 {{"action": "query", "question": "问题原文"}}
 
 判断要点：
 - 优先理解语义意图，不依赖格式
 - 进展更新中，"完成/弄完/搞定/做好了"→ new_status = done；"在做/进行中" → in_progress；"卡住/受阻" → blocked
 - 任务匹配用语义相关性，不要求完全一致
-- 如果消息又长又像会议讨论，选 meeting_notes""",
+- 如果消息又长又像会议讨论，选 meeting_notes
+- 如果消息是"我是xxx，做xxx"/"大家好，我负责xxx"等自我介绍句式，选 self_introduction""",
             }
         ],
     )

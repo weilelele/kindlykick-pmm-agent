@@ -6,9 +6,13 @@ CREATE TABLE members (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     feishu_user_id TEXT UNIQUE NOT NULL,  -- 飞书 open_id
     name        TEXT NOT NULL,
+    bio         TEXT,                     -- 自我介绍（角色/职责描述）
     is_owner    BOOLEAN DEFAULT FALSE,
     created_at  TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Migration: add bio column if upgrading from older schema
+-- ALTER TABLE members ADD COLUMN IF NOT EXISTS bio TEXT;
 
 -- 任务
 CREATE TABLE tasks (
