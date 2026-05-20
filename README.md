@@ -1,4 +1,4 @@
-# 踢屁股专家 · Feishu PM Agent
+# 彩虹屁踢屁股专家 · KindlyKickMatser Feishu PM Agent
 
 > 一个跑在飞书群里的 AI 项目管理 Bot，自动整理任务、跟踪进展、定时催单。
 > An AI-powered project management bot for Feishu (Lark) groups.
