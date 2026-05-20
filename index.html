@@ -1,0 +1,1212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>彩虹屁踢屁股专家 · Kindly Kick Master</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Raleway:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --orange:     #FF5A1F;
+      --cyan:       #22D4E0;
+      --white:      #F2F0E6;
+      --grey:       #1A1F2B;
+      --deep:       #0B0F17;
+      --grey-mid:   #2A3144;
+      --grey-text:  #8896AA;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--deep);
+      color: var(--white);
+      font-family: 'Raleway', sans-serif;
+      font-weight: 400;
+      line-height: 1.7;
+      overflow-x: hidden;
+    }
+
+    /* ── Grid overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(34,212,224,.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,212,224,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Reusable ── */
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 32px; position: relative; z-index: 1; }
+
+    .tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      border: 1px solid rgba(34,212,224,.3);
+      padding: 4px 12px;
+      border-radius: 2px;
+    }
+
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(24px, 4vw, 38px);
+      font-weight: 700;
+      line-height: 1.2;
+      margin-top: 16px;
+    }
+
+    .accent-orange { color: var(--orange); }
+    .accent-cyan   { color: var(--cyan); }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 40px;
+      background: rgba(11,15,23,.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(34,212,224,.1);
+    }
+
+    .nav-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: .1em;
+    }
+    .nav-logo span { color: var(--orange); }
+
+    nav a {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .1em;
+      color: var(--grey-text);
+      text-decoration: none;
+      transition: color .2s;
+    }
+    nav a:hover { color: var(--cyan); }
+    .nav-links { display: flex; gap: 32px; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      padding: 120px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-glow {
+      position: absolute;
+      width: 600px; height: 600px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,90,31,.15) 0%, transparent 70%);
+      top: 50%; left: 60%;
+      transform: translate(-50%,-50%);
+      pointer-events: none;
+    }
+
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(36px, 7vw, 80px);
+      font-weight: 900;
+      line-height: 1.05;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 .line2 { color: var(--orange); }
+
+    .hero-sub {
+      font-size: 18px;
+      font-weight: 300;
+      color: var(--grey-text);
+      max-width: 520px;
+      margin-bottom: 48px;
+      line-height: 1.8;
+    }
+
+    .hero-sub strong { color: var(--white); font-weight: 600; }
+
+    .btn-group { display: flex; gap: 16px; flex-wrap: wrap; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      font-family: 'Raleway', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: all .2s;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #fff;
+      border: 2px solid var(--orange);
+    }
+    .btn-primary:hover { background: #e84d15; border-color: #e84d15; transform: translateY(-2px); }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--cyan);
+      border: 2px solid rgba(34,212,224,.4);
+    }
+    .btn-secondary:hover { border-color: var(--cyan); background: rgba(34,212,224,.06); transform: translateY(-2px); }
+
+    .hero-stats {
+      display: flex;
+      gap: 48px;
+      margin-top: 72px;
+      padding-top: 48px;
+      border-top: 1px solid rgba(242,240,230,.08);
+    }
+
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--orange);
+    }
+
+    .stat-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      color: var(--grey-text);
+      margin-top: 4px;
+      letter-spacing: .05em;
+    }
+
+    /* ── SECTION BASE ── */
+    section { padding: 100px 0; position: relative; }
+
+    /* ── WHY ── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      margin-top: 56px;
+    }
+
+    @media (max-width: 700px) { .why-grid { grid-template-columns: 1fr; } }
+
+    .why-card {
+      background: var(--grey);
+      border: 1px solid rgba(242,240,230,.06);
+      border-radius: 4px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color .2s;
+    }
+    .why-card:hover { border-color: rgba(255,90,31,.3); }
+
+    .why-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--orange), transparent);
+    }
+
+    .why-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .why-card h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: var(--white);
+    }
+
+    .why-card p {
+      font-size: 14px;
+      color: var(--grey-text);
+      line-height: 1.8;
+    }
+
+    /* ── DUAL TRAIT ── */
+    .trait-section { padding: 80px 0; }
+
+    .trait-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px;
+      margin-top: 56px;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    @media (max-width: 700px) { .trait-grid { grid-template-columns: 1fr; } }
+
+    .trait-card {
+      padding: 48px;
+      position: relative;
+    }
+
+    .trait-kick {
+      background: linear-gradient(135deg, #1a0f0a 0%, var(--grey) 100%);
+      border: 1px solid rgba(255,90,31,.2);
+    }
+
+    .trait-rainbow {
+      background: linear-gradient(135deg, #0a1a1b 0%, var(--grey) 100%);
+      border: 1px solid rgba(34,212,224,.2);
+    }
+
+    .trait-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 900;
+      margin-bottom: 16px;
+    }
+
+    .trait-kick .trait-label { color: var(--orange); }
+    .trait-rainbow .trait-label { color: var(--cyan); }
+
+    .trait-card p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--grey-text);
+    }
+
+    .trait-card p strong { color: var(--white); }
+
+    .trait-quote {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(0,0,0,.3);
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--white);
+      border-left: 3px solid;
+    }
+    .trait-kick .trait-quote { border-color: var(--orange); }
+    .trait-rainbow .trait-quote { border-color: var(--cyan); }
+
+    /* ── USE CASES ── */
+    .usecase-list {
+      display: flex;
+      flex-direction: column;
+      gap: 80px;
+      margin-top: 64px;
+    }
+
+    .usecase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .usecase.reverse { direction: rtl; }
+    .usecase.reverse > * { direction: ltr; }
+
+    @media (max-width: 800px) {
+      .usecase, .usecase.reverse { grid-template-columns: 1fr; direction: ltr; }
+    }
+
+    .usecase-info { }
+
+    .usecase-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .2em;
+      color: var(--orange);
+      margin-bottom: 12px;
+    }
+
+    .usecase-info h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+
+    .usecase-info p {
+      font-size: 15px;
+      color: var(--grey-text);
+      line-height: 1.9;
+    }
+
+    /* ── CHAT MOCKUP ── */
+    .chat-mock {
+      background: var(--grey);
+      border: 1px solid rgba(242,240,230,.08);
+      border-radius: 8px;
+      overflow: hidden;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+    }
+
+    .chat-header {
+      background: var(--grey-mid);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(242,240,230,.06);
+    }
+
+    .chat-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .chat-name {
+      font-size: 12px;
+      color: var(--white);
+      font-weight: 500;
+    }
+
+    .chat-sub {
+      font-size: 10px;
+      color: var(--grey-text);
+    }
+
+    .chat-body { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .msg.right { flex-direction: row-reverse; }
+
+    .msg-av {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+
+    .msg-av.user { background: var(--grey-mid); }
+    .msg-av.bot  { background: var(--orange); }
+
+    .bubble {
+      padding: 10px 14px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      line-height: 1.7;
+      max-width: 78%;
+    }
+
+    .bubble.user {
+      background: var(--grey-mid);
+      color: var(--white);
+    }
+
+    .bubble.bot {
+      background: rgba(255,90,31,.12);
+      border: 1px solid rgba(255,90,31,.2);
+      color: var(--white);
+    }
+
+    .bubble .mention { color: var(--cyan); }
+    .bubble .done    { color: #4ade80; }
+    .bubble .warn    { color: var(--orange); }
+
+    .bubble-meta {
+      font-size: 10px;
+      color: var(--grey-text);
+      margin-top: 4px;
+    }
+
+    /* ── HOW ── */
+    .how-steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 56px;
+    }
+
+    @media (max-width: 700px) { .how-steps { grid-template-columns: 1fr; } }
+
+    .step {
+      background: var(--grey);
+      border: 1px solid rgba(242,240,230,.06);
+      border-radius: 4px;
+      padding: 32px;
+      position: relative;
+    }
+
+    .step-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 40px;
+      font-weight: 900;
+      color: rgba(255,90,31,.15);
+      line-height: 1;
+      margin-bottom: 16px;
+    }
+
+    .step h3 {
+      font-family: 'Raleway', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--grey-text);
+      line-height: 1.8;
+    }
+
+    .step code {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      background: rgba(0,0,0,.4);
+      padding: 2px 6px;
+      border-radius: 2px;
+      color: var(--cyan);
+    }
+
+    /* ── GET IT ── */
+    .getit {
+      background: var(--grey);
+      border: 1px solid rgba(255,90,31,.2);
+      border-radius: 4px;
+      padding: 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      margin-top: 64px;
+    }
+
+    .getit::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 100%, rgba(255,90,31,.08) 0%, transparent 60%);
+      pointer-events: none;
+    }
+
+    .getit h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .getit p {
+      color: var(--grey-text);
+      font-size: 16px;
+      margin-bottom: 40px;
+      max-width: 480px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid rgba(242,240,230,.06);
+      padding: 40px 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .footer-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--grey-text);
+    }
+
+    .footer-logo span { color: var(--orange); }
+
+    footer p {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--grey-text);
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,90,31,.3), rgba(34,212,224,.3), transparent);
+      margin: 0;
+    }
+
+    /* ── STORY (creator's note) ── */
+    .story-section { background: rgba(26,31,43,.5); }
+
+    .author-avatar-inline {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid rgba(34,212,224,.5);
+      box-shadow: 0 0 14px rgba(34,212,224,.2);
+      vertical-align: middle;
+      margin-right: 10px;
+      position: relative;
+      top: -3px;
+    }
+
+    .story-body {
+      max-width: 780px;
+      margin-top: 56px;
+      display: flex;
+      flex-direction: column;
+      gap: 52px;
+    }
+
+    .story-chips {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .chip {
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: .12em;
+      padding: 6px 16px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+    .chip-cyan   { color: var(--cyan);   border: 1px solid rgba(34,212,224,.4);  background: rgba(34,212,224,.05); }
+    .chip-orange { color: var(--orange); border: 1px solid rgba(255,90,31,.4);   background: rgba(255,90,31,.05); }
+
+    .story-text {
+      font-size: 17px;
+      line-height: 2;
+      color: var(--grey-text);
+    }
+    .story-text strong { color: var(--white); font-weight: 600; }
+    .story-text em     { color: var(--orange); font-style: normal; font-weight: 600; }
+
+    .story-pullquote {
+      padding: 28px 32px;
+      background: rgba(255,90,31,.04);
+      border: 1px solid rgba(255,90,31,.15);
+      border-left: 3px solid var(--orange);
+      border-radius: 2px;
+    }
+    .story-pullquote p {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(15px, 1.8vw, 20px);
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1.5;
+    }
+
+    .story-timeline {
+      position: relative;
+      padding-left: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .story-timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px; top: 10px; bottom: 10px;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--orange), var(--cyan));
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-bottom: 40px;
+    }
+    .timeline-item:last-child { padding-bottom: 0; }
+
+    .timeline-dot {
+      position: absolute;
+      left: -30px; top: 4px;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      border: 2px solid;
+      background: var(--deep);
+    }
+    .dot-orange { border-color: var(--orange); box-shadow: 0 0 8px rgba(255,90,31,.5); }
+    .dot-cyan   { border-color: var(--cyan);   box-shadow: 0 0 8px rgba(34,212,224,.5); }
+
+    .timeline-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .dot-orange ~ .timeline-content .timeline-label { color: var(--orange); }
+    .dot-cyan   ~ .timeline-content .timeline-label { color: var(--cyan); }
+
+    .timeline-content p {
+      font-size: 15px;
+      line-height: 1.9;
+      color: var(--grey-text);
+    }
+    .timeline-content strong { color: var(--white); font-weight: 600; }
+
+    .story-traits {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 700px) { .story-traits { grid-template-columns: 1fr; } }
+
+    .story-trait {
+      background: var(--grey);
+      border: 1px solid rgba(242,240,230,.06);
+      border-radius: 4px;
+      padding: 28px 24px;
+      position: relative;
+      overflow: hidden;
+    }
+    .story-trait::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--cyan), transparent);
+    }
+    .story-trait-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      color: rgba(34,212,224,.15);
+      margin-bottom: 14px;
+      line-height: 1;
+    }
+    .story-trait p {
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--grey-text);
+    }
+    .story-trait strong { color: var(--white); }
+
+    /* ── SCROLL ANIM ── */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    [data-reveal].visible {
+      opacity: 1;
+      transform: none;
+    }
+    [data-reveal].visible [data-stagger] { animation: none; }
+    .why-card[data-reveal] { transition-delay: 0s; }
+    .why-card[data-reveal]:nth-child(2) { transition-delay: .08s; }
+    .why-card[data-reveal]:nth-child(3) { transition-delay: .16s; }
+    .why-card[data-reveal]:nth-child(4) { transition-delay: .24s; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">KINDLY<span>KICK</span>MASTER</div>
+  <div class="nav-links">
+    <a href="#story">初衷</a>
+    <a href="#why">背景</a>
+    <a href="#trait">特质</a>
+    <a href="#cases">用例</a>
+    <a href="#get">获取</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="container">
+    <p class="hero-eyebrow">// WWWWeile Studio · AI PM Agent</p>
+    <h1>
+      <span style="color:var(--cyan)">彩虹屁</span>踢屁股<br/>
+      <span class="line2">专家</span>
+    </h1>
+    <p class="hero-sub">
+      跑在飞书群里的 AI 项目管理 Bot。<br/>
+      <strong>踢屁股催任务，彩虹屁给力量——</strong><br/>
+      既是零容忍的进度追踪者，也是真心看见你每一份努力的啦啦队长。
+    </p>
+    <div class="btn-group">
+      <a href="https://github.com/weilelele/caihongpi-tipigu-zhuanjia" target="_blank" class="btn btn-primary">
+        ↗ 开源代码 · GitHub
+      </a>
+      <a href="#cases" class="btn btn-secondary">
+        查看用例
+      </a>
+    </div>
+    <div class="hero-stats">
+      <div>
+        <div class="stat-num">~$2</div>
+        <div class="stat-label">/ 月 · API 成本</div>
+      </div>
+      <div>
+        <div class="stat-num">5min</div>
+        <div class="stat-label">部署上线</div>
+      </div>
+      <div>
+        <div class="stat-num">0</div>
+        <div class="stat-label">规则配置</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STORY -->
+<section id="story" class="story-section">
+  <div class="container">
+    <div data-reveal>
+      <p class="tag">// 设计者说</p>
+      <h2 class="section-title"><img src="./avatar.jpg" alt="乐乐" class="author-avatar-inline"/>为什么<span class="accent-orange">造了这个东西</span></h2>
+    </div>
+
+    <div class="story-body">
+
+      <div data-reveal>
+        <div class="story-chips">
+          <span class="chip chip-cyan">大 P 人</span>
+          <span class="chip chip-cyan">大 FP 人</span>
+          <span class="chip chip-orange">大 ENFP</span>
+        </div>
+        <p class="story-text">
+          我非常重视如何推进项目，同时极度看重<strong>情绪价值</strong>——保证大家情绪高涨，对我来说和进度一样重要。<br/>
+          但让我自己人工管理进度？非常难。无数种科学管理方法，在大厂里学过、用过很多，
+          真正要管一个团队的那天我才明白：<em>我需要一个绝对铁面无私的助手。</em>
+        </p>
+      </div>
+
+      <div class="story-pullquote" data-reveal>
+        <p>"如果不能激发人与人之间的连接，再高效的工具也只是一台冷冰冰的机器。"</p>
+      </div>
+
+      <div class="story-timeline" data-reveal>
+        <div class="timeline-item">
+          <div class="timeline-dot dot-orange"></div>
+          <div class="timeline-content">
+            <div class="timeline-label">// V1 · 踢屁股专家</div>
+            <p>能高效整理工作内容，能 push 大家、催进度。<br/>
+            但我发现，他与人之间的<strong>连接变弱了</strong>——没法激发大家互动的欲望，<br/>
+            事件上报不及时，效率也随之变差。</p>
+          </div>
+        </div>
+        <div class="timeline-item">
+          <div class="timeline-dot dot-cyan"></div>
+          <div class="timeline-content">
+            <div class="timeline-label">// V2 · 彩虹屁踢屁股专家</div>
+            <p>激发团队潜力的关键，是能够「<strong>看见</strong>」他——<br/>
+            让他的行为和感受被<strong>看见</strong>、被<strong>尊重</strong>。<br/>
+            于是我把彩虹屁这个特质加了上去，才有了现在的这个产品。</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="story-traits" data-reveal>
+        <div class="story-trait">
+          <div class="story-trait-num">01</div>
+          <p>既能<strong>夸夸大家</strong>、真心看见大家的付出，又不断踢大家屁股，时刻跟进项目日程。</p>
+        </div>
+        <div class="story-trait">
+          <div class="story-trait-num">02</div>
+          <p>完美融入<strong>日常工作流</strong>——把所有文档和想法一股脑丢给他，任务自动整理、通知到人。</p>
+        </div>
+        <div class="story-trait">
+          <div class="story-trait-num">03</div>
+          <p>团队专属的<strong>PMM</strong>（项目营销经理）：你只需要提供素材，他负责让所有人动起来。</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- WHY -->
+<section id="why">
+  <div class="container">
+    <div data-reveal>
+      <p class="tag">// 设计背景</p>
+      <h2 class="section-title">为什么需要一个<br/><span class="accent-orange">彩虹屁踢屁股专家</span>？</h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-card" data-reveal>
+        <div class="why-icon">📋</div>
+        <h3>任务散落在会议记录里</h3>
+        <p>每次开完会，有人记录在文档里，有人记在脑子里。一周后没人记得谁负责什么，截止日期也成了摆设。</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-icon">👻</div>
+        <h3>进展更新靠"催"</h3>
+        <p>项目管理者每天手动追进度，发消息问"这个做完了吗"，得到的回复往往是沉默或一句"在做了"。</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-icon">😶</div>
+        <h3>努力没有被看见</h3>
+        <p>团队成员默默做事，没有反馈，没有认可。时间久了，积极性自然下降——不是不努力，是感觉没人在意。</p>
+      </div>
+      <div class="why-card" data-reveal>
+        <div class="why-icon">🛠</div>
+        <h3>工具太重、配置太多</h3>
+        <p>现有 PM 工具需要大量配置和上手培训。小团队需要的是开箱即用、用自然语言就能操作的助手。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TRAIT -->
+<section id="trait" class="trait-section">
+  <div class="container">
+    <div data-reveal>
+      <p class="tag">// 核心特质</p>
+      <h2 class="section-title">两个特质，<span class="accent-cyan">缺一不可</span></h2>
+    </div>
+    <div class="trait-grid" data-reveal>
+      <div class="trait-card trait-kick">
+        <div class="trait-label">踢屁股</div>
+        <p>
+          催进度、盯截止日、对拖延<strong>零容忍</strong>。<br/>
+          每晚 18:00 准时播报，没有进展的直接点名施压。
+          不说废话，不讲情面，只问结果。
+        </p>
+        <div class="trait-quote">
+          "乐乐，今天约好的 12:00 音乐朋友那边聊了吗？结果呢？"
+        </div>
+      </div>
+      <div class="trait-card trait-rainbow">
+        <div class="trait-label">彩虹屁</div>
+        <p>
+          真心看见每个人的努力。不是泛泛的"加油"，<br/>
+          而是<strong>具体说出他做了什么、为什么值得被看见</strong>。<br/>
+          每次汇报、每次播报，都有一句话留给这个人。
+          让团队感受到：我不只是一台完成任务的机器。
+        </p>
+        <div class="trait-quote">
+          "三天磨一件事还没让它凉——这种耐心很多人做不到，漂亮。"
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- USE CASES -->
+<section id="cases">
+  <div class="container">
+    <div data-reveal>
+      <p class="tag">// 使用场景</p>
+      <h2 class="section-title">实际上是<span class="accent-orange">这样用的</span></h2>
+    </div>
+
+    <div class="usecase-list">
+
+      <!-- Case 1: 入群 -->
+      <div class="usecase" data-reveal>
+        <div class="usecase-info">
+          <div class="usecase-num">USE CASE 01</div>
+          <h3>拉进群，立刻开始认识所有人</h3>
+          <p>把 Bot 拉进项目群，它自动发欢迎消息，邀请每位成员 @ 它做自我介绍。Bot 记住每个人的名字和角色，后续分配任务时自动关联。</p>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-avatar" style="background:var(--orange)">🤖</div>
+            <div>
+              <div class="chat-name">彩虹屁踢屁股专家</div>
+              <div class="chat-sub">机器人 · 外星人项目组</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot">大家好！我是彩虹屁踢屁股专家 👋<br/>我会帮你们管任务、追进度——同时也会真心看见每个人的努力，不只是催单。<br/><br/>请每位成员 @ 我做个自我介绍，说说你是谁、主要负责什么 🙌</div>
+              </div>
+            </div>
+            <div class="msg right">
+              <div class="msg-av user">乐</div>
+              <div>
+                <div class="bubble user">@彩虹屁踢屁股专家 我是乐乐，主要负责商务对接和资源拓展</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot"><span class="mention">@乐乐</span> 认识你了！商务这块你来扛，重要的位置 ✅<br/>我发现有 3 个待分配任务提到了你的名字，已自动归到你名下。</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 2: 会议记录 -->
+      <div class="usecase reverse" data-reveal>
+        <div class="usecase-info">
+          <div class="usecase-num">USE CASE 02</div>
+          <h3>发飞书文档链接，自动提取全部任务</h3>
+          <p>把会议记录的飞书文档链接发给 Bot，它读取全文，自动提取任务、分配负责人、设置优先级，全程不需要你格式化任何内容。</p>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-avatar" style="background:var(--grey-mid)">👤</div>
+            <div>
+              <div class="chat-name">管理员私聊</div>
+              <div class="chat-sub">与踢屁股专家的对话</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg right">
+              <div class="msg-av user">乐</div>
+              <div>
+                <div class="bubble user">https://company.feishu.cn/docx/Abc123<br/>今天的战略会议记录</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot">⏳ 正在读取飞书文档…</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot">✅ 「外星人项目战略会议」已处理<br/><br/>新增 <span class="done">8 个任务</span>：<br/><span class="warn">🔴</span> 联系德宏确认科创学院意向 → 乐乐<br/><span class="warn">🔴</span> 注册多个 Gmail 账号 → 晟晟<br/><span class="warn">🟡</span> 注册新 B站账号迁移内容 → 悦悦<br/>…</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 3: 彩虹屁 + 进展汇报 -->
+      <div class="usecase" data-reveal>
+        <div class="usecase-info">
+          <div class="usecase-num">USE CASE 03</div>
+          <h3>努力被真心看见，而不只是被记录</h3>
+          <p>每次汇报，Bot 先说出你具体做了什么、为什么值得被认可——不是泛泛的"加油"，是真的看见。然后才是记录任务、催下一步。<br/><br/>让团队感受到：这里不只是一台完成任务的机器。</p>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-avatar" style="background:#1a3a1a">💬</div>
+            <div>
+              <div class="chat-name">外星人项目组</div>
+              <div class="chat-sub">群聊 · 3人</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg right">
+              <div class="msg-av user">乐</div>
+              <div>
+                <div class="bubble user">@彩虹屁踢屁股专家 终于搞定了。联系德宏这个跑了三天，今天他们确认合作了</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot"><span class="mention">@乐乐</span> 三天磨一件事还没让它凉——这种耐心很多人做不到，漂亮 🎯<br/>「联系德宏确认合作意向」已标记 <span class="done">完成 ✅</span><br/>协议这边预计什么时候能推进？</div>
+              </div>
+            </div>
+            <div class="msg right">
+              <div class="msg-av user">晟</div>
+              <div>
+                <div class="bubble user">@彩虹屁踢屁股专家 元器件报价比预期贵了 30%，还在找其他供应商</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot"><span class="mention">@晟晟</span> 价格卡住了最消耗人，你还没放弃就是对的 💪<br/>「元器件报价比较」更新为进行中 🔄 有候选供应商了吗？</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 4: 播报 -->
+      <div class="usecase reverse" data-reveal>
+        <div class="usecase-info">
+          <div class="usecase-num">USE CASE 04</div>
+          <h3>每天早晚自动播报，彩虹屁与踢屁股并用</h3>
+          <p>每天 10:00 早间播报，逐一 @ 每个人并具体说出昨天做了什么好事，带着鼓励进入新的一天。18:00 晚间播报，今天有进展的先被看见，没进展的直接点名施压——一条消息两种体感。</p>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-avatar" style="background:var(--orange)">🤖</div>
+            <div>
+              <div class="chat-name">彩虹屁踢屁股专家 · 18:00 播报</div>
+              <div class="chat-sub">自动发送</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot">
+                  收工了大家 🌙<br/><br/>
+                  <span class="mention">@晟晟</span> 今天把硬件样品出货时间全部整理完了，这个数据挺细的，辛苦了 ✅<br/><br/>
+                  <span class="mention">@悦悦</span> B站账号注册好了，内容迁移继续推，YouTube 凌晨更新记得发群里总结。<br/><br/>
+                  <span class="mention">@乐乐</span> 今天约好的 12:00 音乐朋友那边聊了吗？14:00 阿索那边硬件时间线出来了吗？德宏那边还没消息——明天这几个要有结果。
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 5: 批量操作 -->
+      <div class="usecase" data-reveal>
+        <div class="usecase-info">
+          <div class="usecase-num">USE CASE 05</div>
+          <h3>自然语言批量操作，不用一个个点</h3>
+          <p>说"这几个都分配给 Sam"或"都完成了可以清掉"，Bot 自动理解意图并批量执行——不需要打开任务列表逐一操作。</p>
+        </div>
+        <div class="chat-mock">
+          <div class="chat-header">
+            <div class="chat-avatar" style="background:var(--grey-mid)">👤</div>
+            <div>
+              <div class="chat-name">管理员私聊</div>
+              <div class="chat-sub">与踢屁股专家的对话</div>
+            </div>
+          </div>
+          <div class="chat-body">
+            <div class="msg right">
+              <div class="msg-av user">乐</div>
+              <div>
+                <div class="bubble user">这几个都分配给 Sam<br/><br/>🔴 邮件分组发送测试<br/>🔴 注册多个 Gmail 账号<br/>🟡 发送新账号注册链接给乐乐</div>
+              </div>
+            </div>
+            <div class="msg">
+              <div class="msg-av bot">🤖</div>
+              <div>
+                <div class="bubble bot">✅ 已将 3 个任务分配给晟晟（Sam）：<br/>  · 邮件分组发送测试<br/>  · 注册多个 Gmail 账号<br/>  · 发送新账号注册链接给乐乐</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- HOW TO GET IT -->
+<section id="get">
+  <div class="container">
+    <div data-reveal>
+      <p class="tag">// 获取渠道</p>
+      <h2 class="section-title">五分钟<span class="accent-orange">部署上线</span></h2>
+    </div>
+
+    <div class="how-steps" data-reveal>
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>建好基础设施</h3>
+        <p>在 <strong>Supabase</strong> 新建项目并运行 <code>schema.sql</code> 建表。申请 <strong>Anthropic API Key</strong>，在飞书开放平台创建企业自建应用并开启机器人。</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>一键部署 Railway</h3>
+        <p>Fork GitHub 仓库后连接 Railway，填入环境变量（Feishu / Supabase / Anthropic），推送即部署。把 Railway 域名填回飞书 Webhook。</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>把 Bot 拉进群</h3>
+        <p>Bot 自动发欢迎消息，大家轮流 @ 它做自我介绍。之后把会议记录发给它，任务自动提取，当天就能开始追进度。</p>
+      </div>
+    </div>
+
+    <div class="getit" data-reveal>
+      <h2>开源 · 免费 · 自部署</h2>
+      <p>所有代码开放在 GitHub，按实际 API 用量付费，小团队每月约 $2。</p>
+      <div class="btn-group" style="justify-content:center">
+        <a href="https://github.com/weilelele/caihongpi-tipigu-zhuanjia" target="_blank" class="btn btn-primary">
+          ↗ 查看 GitHub 仓库
+        </a>
+        <a href="https://github.com/weilelele/caihongpi-tipigu-zhuanjia/blob/main/README.md" target="_blank" class="btn btn-secondary">
+          阅读部署文档
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo">WWWWeile <span>Studio</span></div>
+      <p>做温暖浪漫的AI产品</p>
+      <p>© 2025 · MIT License</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Scroll reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('visible');
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0, rootMargin: "0px 0px -40px 0px" });
+
+  document.querySelectorAll('[data-reveal]').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
