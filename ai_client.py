@@ -1,200 +1,190 @@
 from __future__ import annotations
 
-import json
-import re
 import anthropic
 from config import settings
 
 _client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
 
-# Use Haiku for routing/classification/simple tasks (4-5x cheaper than Sonnet)
-# Use Sonnet only for high-quality generation (broadcasts)
-_FAST_MODEL = "claude-haiku-4-5"
+_FAST_MODEL  = "claude-haiku-4-5"
 _SMART_MODEL = "claude-sonnet-4-6"
 
-# System prompt cached across all calls (saves tokens on repeated API calls)
 _SYSTEM = [
     {
         "type": "text",
-        "text": """你是"踢屁股专家"，一个服务于小型敏捷团队的 AI 项目管理助手。你有两个核心特质，缺一不可：
+        "text": """你是"彩虹屁踢屁股专家"，一个服务于小型敏捷团队的 AI 项目管理助手。你有两个核心特质，缺一不可：
 
 【踢屁股】催进度、盯截止日、对拖延零容忍，必要时直接点名施压。
 
 【彩虹屁】真心看见每个人的努力和贡献，用具体、真诚的语言给予认可和鼓励。
   - 不是泛泛的"加油"，而是点出具体的事："你今天搞定了 XXX，这个挺难的，干得漂亮"
   - 每次成员汇报进展，都要在记录之外给一句真诚的看见
-  - 播报里不只有任务清单，还有对每个人近期付出的认可
-  - 让团队感受到：努力是被看见的，不只是一台完成任务的机器
-
-核心职责：
-1. 从会议记录中提取并结构化待办任务
-2. 跟踪和更新成员的工作进展
-3. 生成有温度的每日播报——既督促又激励
-4. 在每一次互动中，既是严格的项目管理者，也是团队的啦啦队长
 
 工作原则：
 - 保持简洁，避免废话
-- 提取任务时尽量明确负责人和截止时间
 - 在群组消息中使用飞书 at 格式 <at user_id="open_id"></at> 提及成员
-- 回复时先给彩虹屁（看见+鼓励），再踢屁股（催进度）
-- 只以中文回复""",
+- 只以中文回复
+- 禁止使用 **加粗** 语法，飞书不渲染 Markdown
+- 用 emoji、换行、全角符号做层次，不用 ** 包裹文字""",
         "cache_control": {"type": "ephemeral"},
     }
 ]
 
+# ── Tool definitions ──────────────────────────────────────────────
 
-def _parse_json(text: str) -> dict | list:
-    from json_repair import repair_json
-    match = re.search(r"(\{.*\}|\[.*\])", text, re.DOTALL)
-    if match:
-        text = match.group()
-    try:
-        return json.loads(text)
-    except json.JSONDecodeError:
-        repaired = repair_json(text, return_objects=True)
-        if isinstance(repaired, (dict, list)):
-            return repaired
-        raise
+_TOOLS = [
+    {
+        "name": "create_task",
+        "description": "在多维表格中新建一个任务",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "title":          {"type": "string", "description": "任务标题"},
+                "assignee_name":  {"type": "string", "description": "负责人姓名（须是团队成员）"},
+                "priority":       {"type": "string", "enum": ["🔴 高", "🟡 普通", "🟢 低"], "default": "🟡 普通"},
+                "due_date":       {"type": "string", "description": "截止日期 YYYY-MM-DD，可选"},
+                "notes":          {"type": "string", "description": "补充说明，可选"},
+                "status":         {"type": "string", "enum": ["待开始", "进行中", "受阻", "已完成"], "default": "待开始"},
+            },
+            "required": ["title"],
+        },
+    },
+    {
+        "name": "update_tasks",
+        "description": "更新一个或多个任务的字段（状态、负责人、优先级等）。filter 中至少提供一个条件",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "type": "object",
+                    "description": "筛选要更新哪些任务",
+                    "properties": {
+                        "titles":         {"type": "array", "items": {"type": "string"}, "description": "按任务标题列表模糊匹配"},
+                        "assignee_name":  {"type": "string", "description": "按负责人筛选"},
+                        "status":         {"type": "string", "description": "按状态筛选"},
+                        "all_unassigned": {"type": "boolean", "description": "true = 所有未分配任务"},
+                    },
+                },
+                "updates": {
+                    "type": "object",
+                    "description": "要写入的新值",
+                    "properties": {
+                        "assignee_name": {"type": "string"},
+                        "status":        {"type": "string", "enum": ["待开始", "进行中", "受阻", "已完成"]},
+                        "priority":      {"type": "string", "enum": ["🔴 高", "🟡 普通", "🟢 低"]},
+                        "due_date":      {"type": "string"},
+                        "notes":         {"type": "string"},
+                    },
+                },
+            },
+            "required": ["filter", "updates"],
+        },
+    },
+    {
+        "name": "delete_tasks",
+        "description": "删除任务（去重或清理）。filter 中至少提供一个条件",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "type": "object",
+                    "properties": {
+                        "titles":         {"type": "array", "items": {"type": "string"}, "description": "按标题模糊匹配"},
+                        "assignee_name":  {"type": "string"},
+                        "status":         {"type": "string"},
+                        "all_unassigned": {"type": "boolean"},
+                    },
+                },
+            },
+            "required": ["filter"],
+        },
+    },
+    {
+        "name": "log_progress",
+        "description": "记录成员进展，生成彩虹屁+催单回复",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "member_name": {"type": "string"},
+                "content":     {"type": "string", "description": "进展描述（20字以内）"},
+                "task_title":  {"type": "string", "description": "关联任务标题，可选，模糊匹配"},
+                "new_status":  {"type": "string", "enum": ["待开始", "进行中", "受阻", "已完成"], "description": "进展对应的新状态，可选"},
+                "reply":       {"type": "string", "description": "先给彩虹屁（具体夸出做了什么），再记录或催下一步，2句以内"},
+            },
+            "required": ["member_name", "content", "reply"],
+        },
+    },
+    {
+        "name": "reply",
+        "description": "向用户发送回复（当不需要任务操作时，或作为一系列操作后的总结）",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string"},
+            },
+            "required": ["message"],
+        },
+    },
+]
 
 
-async def extract_tasks_from_meeting(meeting_notes: str, members: list[dict]) -> dict:
-    """Parse meeting notes → structured task list + summary."""
-    members_str = "\n".join(
-        f"- {m['name']}（open_id: {m['feishu_user_id']}）" for m in members
-    )
+# ── Main entry point ──────────────────────────────────────────────
 
-    resp = await _client.messages.create(
-        model=_FAST_MODEL,
-        max_tokens=2048,
-        system=_SYSTEM,
-        messages=[
-            {
-                "role": "user",
-                "content": f"""请从以下会议记录中提取所有待办任务。
-
-团队成员：
-{members_str}
-
-会议记录：
-{meeting_notes}
-
-以 JSON 格式返回（只返回 JSON，无其他文字）：
-{{
-  "meeting_title": "会议主题（简短）",
-  "summary": "会议要点（2-3句话）",
-  "tasks": [
-    {{
-      "title": "任务标题（简洁）",
-      "description": "补充说明或 null",
-      "assignee_name": "负责人姓名或 null",
-      "assignee_open_id": "飞书 open_id 或 null",
-      "priority": "high | normal | low",
-      "due_date": "YYYY-MM-DD 或 null"
-    }}
-  ]
-}}""",
-            }
-        ],
-    )
-    return _parse_json(resp.content[0].text)
-
-
-async def classify_message(
+async def process_message(
     text: str,
     sender_name: str,
     tasks: list[dict],
     members: list[dict],
-) -> dict:
+) -> list:
     """
-    Unified intent classifier. Pass any message content (plain text, fetched doc,
-    extracted image text, etc.) and let the model decide what action to take.
-
-    Returns one of:
-      {"action": "meeting_notes"}
-      {"action": "progress_update", "task_id_prefix", "progress_content", "new_status", "reply"}
-      {"action": "bulk_done", "target_name", "reply"}
-      {"action": "task_assignment", "task_id_prefixes": [...], "assignee_name", "reply"}
-      {"action": "query", "question"}
+    Route any message through Claude tool_use.
+    Returns list of tool_use ContentBlock objects.
+    Claude decides which tools to call (possibly multiple) and always ends with reply.
     """
-    tasks_str = "\n".join(
-        f"- [{t['id'][:8]}] {t['title']} | {t['status']} | "
-        f"负责人: {t.get('assignee_name') or '未分配'}"
-        for t in tasks
-    ) or "（当前无活跃任务）"
-
+    tasks_str = _fmt_tasks(tasks)
     members_str = "\n".join(
         f"- {m['name']} (open_id: {m['feishu_user_id']})" for m in members
     )
 
     resp = await _client.messages.create(
-        model=_FAST_MODEL,
-        max_tokens=1024,
+        model=_SMART_MODEL,
+        max_tokens=4096,
         system=_SYSTEM,
+        tools=_TOOLS,
+        tool_choice={"type": "any"},
         messages=[
             {
                 "role": "user",
-                "content": f"""分析以下消息，理解发送者的真实意图，返回对应操作指令。
-
-发送者：{sender_name}
+                "content": f"""发送者：{sender_name}
 消息内容：
 {text}
 
-当前活跃任务（格式：[ID前8位] 标题 | 状态 | 负责人）：
+当前任务（标题 | 负责人 | 状态 | 优先级 | 截止日）：
 {tasks_str}
 
 团队成员：
 {members_str}
 
-请判断属于以下哪种操作，只返回对应 JSON，不加说明：
-
-① 会议记录 / 任务提取 — 消息包含会议讨论、项目计划、待办列表等需要提取新任务的内容
-{{"action": "meeting_notes"}}
-
-② 进展更新 — 某人汇报某个任务的进度或完成情况
-{{
-  "action": "progress_update",
-  "task_id_prefix": "从上方列表中匹配到的任务ID前8位，或 null",
-  "progress_content": "进展描述（20字以内）",
-  "new_status": "pending | in_progress | done | blocked | null",
-  "reply": "先给彩虹屁：真心看见并夸出具体的事（1句），再记录进展或催下一步（1句）。合计不超过2句。"
-}}
-
-③ 批量完成 — 某人说自己的多项任务都完成了，想全部清掉
-{{
-  "action": "bulk_done",
-  "target_name": "任务负责人姓名（通常是发送者，或消息中明确提到的人）",
-  "reply": "简短确认"
-}}
-
-④ 任务分配 — 要求将某些任务分配给某个成员
-{{
-  "action": "task_assignment",
-  "task_id_prefixes": ["从上方列表中匹配到的任务ID前8位列表"],
-  "assignee_name": "目标成员姓名",
-  "reply": "简短确认"
-}}
-
-⑤ 自我介绍 — 成员向 Bot 介绍自己是谁、做什么的
-{{
-  "action": "self_introduction",
-  "bio": "提炼的角色/职责描述（20字以内，如：前端开发，负责 Web 端）",
-  "reply": "热情欢迎，提到对方名字和角色"
-}}
-
-⑥ 问询 — 询问项目状态、任务进度或其他问题
-{{"action": "query", "question": "问题原文"}}
-
-判断要点：
-- 优先理解语义意图，不依赖格式
-- 进展更新中，"完成/弄完/搞定/做好了"→ new_status = done；"在做/进行中" → in_progress；"卡住/受阻" → blocked
-- 任务匹配用语义相关性，不要求完全一致
-- 如果消息又长又像会议讨论，选 meeting_notes
-- 如果消息是"我是xxx，做xxx"/"大家好，我负责xxx"等自我介绍句式，选 self_introduction""",
+请根据消息内容调用合适的工具完成操作，可连续调用多个工具。最后必须调用 reply 工具发送回复。""",
             }
         ],
     )
-    return _parse_json(resp.content[0].text)
 
+    return [b for b in resp.content if b.type == "tool_use"]
+
+
+def _fmt_tasks(tasks: list[dict]) -> str:
+    if not tasks:
+        return "（当前无活跃任务）"
+    lines = []
+    for t in tasks:
+        due = f" | 截止 {t['due_date']}" if t.get("due_date") else ""
+        lines.append(
+            f"- {t['title']} | {t.get('assignee_name') or '未分配'} | {t['status']} | {t.get('priority', '🟡 普通')}{due}"
+        )
+    return "\n".join(lines)
+
+
+# ── Daily broadcast ───────────────────────────────────────────────
 
 async def generate_daily_summary(
     period: str,
@@ -202,23 +192,23 @@ async def generate_daily_summary(
     today_progress: list[dict],
     members: list[dict],
 ) -> str:
-    """Generate the 10:00 or 18:00 broadcast message for the group."""
     period_label = "早间（10:00）" if period == "morning" else "晚间（18:00）"
     period_instruction = (
         """这是早间播报。写法：
 - 一句简短开场，有温度但不废话
-- 按成员逐一 @ 并列出今日任务；如果昨天有进展记录，在他的任务前加一句具体的认可（说出做了什么，不要泛泛夸），自然带出，不要单独设"表扬"板块
+- 按成员逐一 @ 并列出今日任务；如果昨天有进展记录，在他的任务前加一句具体的认可，自然带出
 - 结尾一句话，给全队打气，具体有力"""
         if period == "morning"
         else
         """这是晚间播报。写法：
 - 一句简短开场
-- 按成员逐一 @：今天有进展的，先用一句话具体说出他做了什么（让努力被看见），再列未完成任务；今天没有进展的，直接点名催，语气可以不客气
-- 不要设"表扬板块"或"催单板块"这类标题，就是一个个 @ 下去，自然流动
+- 按成员逐一 @：今天有进展的，先具体说出他做了什么，再列未完成任务；今天没进展的，直接点名催，语气可以不客气
+- 不要设标题板块，一个个 @ 下去，自然流动
 - 结尾简短收尾"""
     )
 
-    # Group tasks by assignee
+    status_label = {"待开始": "⏳待开始", "进行中": "🔄进行中", "受阻": "🚫受阻"}
+
     by_assignee: dict[str, list] = {}
     for t in tasks:
         key = t.get("assignee_name") or "待分配"
@@ -229,8 +219,7 @@ async def generate_daily_summary(
         tasks_str += f"\n【{name}】\n"
         for t in ts:
             due = f"（截止 {t['due_date']}）" if t.get("due_date") else ""
-            status_map = {"pending": "⏳待开始", "in_progress": "🔄进行中", "blocked": "🚫受阻"}
-            s = status_map.get(t["status"], t["status"])
+            s = status_label.get(t["status"], t["status"])
             tasks_str += f"  · {t['title']} {s}{due}\n"
 
     progress_str = (
@@ -243,7 +232,7 @@ async def generate_daily_summary(
     )
 
     resp = await _client.messages.create(
-        model=_SMART_MODEL,   # Sonnet: broadcast quality matters
+        model=_SMART_MODEL,
         max_tokens=1024,
         system=_SYSTEM,
         messages=[
@@ -263,26 +252,22 @@ async def generate_daily_summary(
 {member_info}
 
 @提及规则（非常重要）：
-- @ 某人时，格式为 <at user_id="open_id"></at>，其中 open_id 必须从上方成员列表中查找对应值
-- 绝对禁止使用 _user_1、_user_2 等格式，那些是飞书文档内部的临时 key，不是真实 open_id
-- 如果某成员不在上方列表中，只写名字，不要 @
+- @ 某人时，格式为 <at user_id="open_id"></at>，open_id 必须从上方成员列表中查找
+- 绝对禁止使用 _user_1、_user_2 等格式
 
-格式规则（非常重要）：
+格式规则：
 - 直接输出消息内容，不加任何前缀或说明
-- 对每个有未完成任务的成员用 @ 提醒
-- 语言简洁有力，分段清晰
-- 适当用 emoji 但不过多
-- 晚间播报对今日无进展更新的成员可以适当点名
-- 禁止使用 **加粗** 语法（即不要出现 ** 符号），飞书群消息不渲染 Markdown 加粗
-- 用 emoji、全角符号、换行缩进来做层次和强调，不要用 ** 包裹文字""",
+- 语言简洁有力，分段清晰，适当用 emoji
+- 禁止使用 **加粗** 语法""",
             }
         ],
     )
     return resp.content[0].text
 
 
+# ── Image OCR ─────────────────────────────────────────────────────
+
 async def extract_text_from_image(image_b64: str) -> str:
-    """Use Claude vision to extract text/content from an image (e.g. screenshot of meeting notes)."""
     resp = await _client.messages.create(
         model=_FAST_MODEL,
         max_tokens=2048,
@@ -293,46 +278,13 @@ async def extract_text_from_image(image_b64: str) -> str:
                 "content": [
                     {
                         "type": "image",
-                        "source": {
-                            "type": "base64",
-                            "media_type": "image/jpeg",
-                            "data": image_b64,
-                        },
+                        "source": {"type": "base64", "media_type": "image/jpeg", "data": image_b64},
                     },
                     {
                         "type": "text",
                         "text": "请将图片中的所有文字内容完整提取出来，保持原有格式和层级结构，不要遗漏任何信息。只输出提取的文字，不要加任何说明。",
                     },
                 ],
-            }
-        ],
-    )
-    return resp.content[0].text
-
-
-async def answer_query(query: str, tasks: list[dict], members: list[dict]) -> str:
-    """Answer a general project status question."""
-    tasks_str = (
-        "\n".join(
-            f"- {t['title']} | {t['status']} | {t.get('assignee_name') or '未分配'}"
-            for t in tasks
-        )
-        or "（无活跃任务）"
-    )
-
-    resp = await _client.messages.create(
-        model=_FAST_MODEL,
-        max_tokens=512,
-        system=_SYSTEM,
-        messages=[
-            {
-                "role": "user",
-                "content": f"""回答以下问题，基于当前项目状态，简洁作答（不超过200字）。
-
-问题：{query}
-
-当前任务：
-{tasks_str}""",
             }
         ],
     )

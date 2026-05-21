@@ -3,6 +3,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 import database as db
+import bitable_client as bc
 import ai_client as ai
 import feishu_client as fc
 
@@ -12,7 +13,7 @@ scheduler = AsyncIOScheduler(timezone=_tz)
 
 async def _do_broadcast(period: str) -> None:
     """Core logic: generate and send the daily broadcast. Called by cron and /播报 command."""
-    tasks = db.get_active_tasks()
+    tasks = await bc.list_active_records()
     today_progress = db.get_today_progress()
     members = db.get_members()
 
