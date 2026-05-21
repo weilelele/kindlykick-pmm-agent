@@ -208,20 +208,42 @@ async def _handle_content(
             tasks_modified = True
 
         elif name == "update_tasks":
-            targets = _filter_records(tasks, inp.get("filter", {}))
+            filter_ = inp.get("filter", {})
+            if not _filter_has_condition(filter_):
+                log.warning("update_tasks called with empty filter — skipped")
+                reply_text = "⚠️ 更新操作需要指定条件，请说明要更新哪些任务。"
+                continue
+            targets = _filter_records(tasks, filter_)
             updates = dict(inp.get("updates", {}))
             if "assignee_name" in updates:
                 updates["assignee_open_id"] = _resolve_open_id(updates.pop("assignee_name"), members)
             for rec in targets:
                 await bc.update_record(rec["record_id"], updates)
+                # Keep snapshot fresh for subsequent filter operations in same batch
+                rec.update(updates)
             log.info("Updated %d records with %s", len(targets), updates)
             tasks_modified = True
 
         elif name == "delete_tasks":
-            targets = _filter_records(tasks, inp.get("filter", {}))
+            filter_ = inp.get("filter", {})
+            if not _filter_has_condition(filter_):
+                log.warning("delete_tasks called with empty filter — skipped")
+                reply_text = "⚠️ 删除操作需要指定条件，请说明要删哪些任务。"
+                continue
+            targets = _filter_records(tasks, filter_)
+            # Safety cap: refuse silent bulk-delete of more than half the task list
+            if len(targets) > max(3, len(tasks) // 2):
+                log.warning("delete_tasks would remove %d/%d tasks — blocked", len(targets), len(tasks))
+                reply_text = (
+                    f"⚠️ 这个操作会删除 {len(targets)} 条任务（超过总数一半），"
+                    "请用更具体的条件，或逐条确认后再删。"
+                )
+                continue
+            deleted_titles = [r["title"] for r in targets]
             for rec in targets:
                 await bc.delete_record(rec["record_id"])
-            log.info("Deleted %d records", len(targets))
+                tasks.remove(rec)   # keep snapshot current
+            log.info("Deleted %d records: %s", len(deleted_titles), deleted_titles)
             tasks_modified = True
 
         elif name == "log_progress":
@@ -268,6 +290,16 @@ def _resolve_open_id(name: str | None, members: list[dict]) -> str | None:
     return None
 
 
+def _filter_has_condition(filter_: dict) -> bool:
+    """Return True if filter has at least one meaningful condition."""
+    return bool(
+        filter_.get("titles")
+        or filter_.get("assignee_name")
+        or filter_.get("status")
+        or filter_.get("all_unassigned")
+    )
+
+
 def _filter_records(tasks: list[dict], filter_: dict) -> list[dict]:
     result = list(tasks)
 
@@ -285,8 +317,14 @@ def _filter_records(tasks: list[dict], filter_: dict) -> list[dict]:
         matched = []
         for t in result:
             tt = t.get("title", "")
-            if any(ft in tt or tt in ft for ft in filter_["titles"]):
-                matched.append(t)
+            for ft in filter_["titles"]:
+                # Require filter term to be at least 5 chars OR an exact substring of ≥50% of task title
+                if len(ft) >= 5 and (ft in tt or tt in ft):
+                    matched.append(t)
+                    break
+                elif len(ft) < 5 and tt == ft:  # short terms: exact match only
+                    matched.append(t)
+                    break
         result = matched
 
     return result
