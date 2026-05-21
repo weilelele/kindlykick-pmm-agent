@@ -181,6 +181,7 @@ async def _handle_content(
     log.info("Tool calls from Claude: %s", [c.name for c in tool_calls])
 
     reply_text: str | None = None
+    tasks_modified = False
 
     for call in tool_calls:
         name = call.name
@@ -197,6 +198,7 @@ async def _handle_content(
                 "notes":            inp.get("notes"),
             })
             log.info("Created task: %s → %s", inp["title"], inp.get("assignee_name"))
+            tasks_modified = True
 
         elif name == "update_tasks":
             targets = _filter_records(tasks, inp.get("filter", {}))
@@ -206,12 +208,14 @@ async def _handle_content(
             for rec in targets:
                 await bc.update_record(rec["record_id"], updates)
             log.info("Updated %d records with %s", len(targets), updates)
+            tasks_modified = True
 
         elif name == "delete_tasks":
             targets = _filter_records(tasks, inp.get("filter", {}))
             for rec in targets:
                 await bc.delete_record(rec["record_id"])
             log.info("Deleted %d records", len(targets))
+            tasks_modified = True
 
         elif name == "log_progress":
             member = db.get_member_by_open_id(sender_open_id) if sender_open_id else None
@@ -239,6 +243,11 @@ async def _handle_content(
     elif not any(c.name == "reply" for c in tool_calls):
         # Safety fallback — Claude forgot to call reply
         await send(f"{at_prefix}✅ 操作完成。")
+
+    # After any write operation, fetch fresh tasks and send updated list
+    if tasks_modified:
+        fresh = await bc.list_active_records()
+        await send(_format_task_list(fresh))
 
 
 # ── Helpers ───────────────────────────────────────────────────────
