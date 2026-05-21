@@ -188,16 +188,23 @@ async def _handle_content(
         inp  = call.input
 
         if name == "create_task":
+            title = inp["title"].strip()
+            # Skip if a task with the same title already exists
+            if any(t.get("title", "").strip() == title for t in tasks):
+                log.info("Skipping duplicate task: %s", title)
+                continue
             assignee_oid = _resolve_open_id(inp.get("assignee_name"), members)
-            await bc.create_record({
-                "title":            inp["title"],
+            new_rec = await bc.create_record({
+                "title":            title,
                 "assignee_open_id": assignee_oid,
                 "status":           inp.get("status", "待开始"),
                 "priority":         inp.get("priority", "🟡 普通"),
                 "due_date":         inp.get("due_date"),
                 "notes":            inp.get("notes"),
             })
-            log.info("Created task: %s → %s", inp["title"], inp.get("assignee_name"))
+            # Add to local cache so subsequent create_task calls in same batch also dedup
+            tasks.append(new_rec)
+            log.info("Created task: %s → %s", title, inp.get("assignee_name"))
             tasks_modified = True
 
         elif name == "update_tasks":
