@@ -100,9 +100,17 @@
       color: var(--grey-text);
       text-decoration: none;
       transition: color .2s;
+      white-space: nowrap;
     }
     nav a:hover { color: var(--cyan); }
     .nav-links { display: flex; gap: 32px; }
+
+    @media (max-width: 600px) {
+      nav { padding: 14px 16px; }
+      .nav-logo { font-size: 11px; letter-spacing: .05em; }
+      .nav-links { gap: 14px; }
+      nav a { font-size: 11px; letter-spacing: 0; }
+    }
 
     /* ── HERO ── */
     .hero {
